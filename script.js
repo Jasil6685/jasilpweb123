@@ -16,10 +16,11 @@ for (var j = 0; j < allElements.length; j++) {
   var i = 0,
     isTag,
     text;
-  (function type() {
+
+  function type() {
     text = devTypeText.slice(0, ++i);
     if (text === devTypeText) {
-      addKeyListener(); // Add event listener after typing is complete
+      addInputListener(); // Add input event listener after typing is complete
       return;
     }
     element.innerHTML = text + `<span class='blinker'>&#32;</span>`;
@@ -28,25 +29,38 @@ for (var j = 0; j < allElements.length; j++) {
     if (char === ">") isTag = false;
     if (isTag) return type();
     setTimeout(type, 60);
-  })();
+  }
 
- function addKeyListener() {
-  let input = "";
-  document.addEventListener("keydown", function (event) {
-    var key = event.key.toLowerCase();
-    if (key === "y" || key === "n") {
-      input += key;
-      element.innerHTML += key;
-    } else if (event.code === "Enter") {
-      processInput(input);
-      input = ""; // Reset input for the next interaction
-      simulateEnter();
-    }
-  });
-}
+  type(); // Start typing animation
 
+  function addInputListener() {
+    let input = "";
+    let typing = true;
+
+    document.addEventListener("keydown", function (event) {
+      if (!typing) return;
+
+      var key = event.key.toLowerCase();
+      if (key === "y" || key === "n") {
+        input += key;
+        element.innerHTML += key;
+      } else if (event.code === "Enter") {
+        processInput(input);
+        input = ""; // Reset input for the next interaction
+        simulateEnter();
+      }
+    });
+
+    // Handle clicking outside the input field on mobile
+    document.addEventListener("click", function (event) {
+      if (event.target !== element && typing) {
+        input = ""; // Clear input if user clicks outside
+      }
+    });
+  }
 
   function processInput(input) {
+    typing = false; // Stop further typing
     if (input === "y") {
       reply(" You entered 'Y'");
     } else if (input === "n") {
@@ -61,8 +75,11 @@ for (var j = 0; j < allElements.length; j++) {
   }
 
   function simulateEnter() {
+    typing = false; // Stop further typing
     setTimeout(function () {
-      element.innerHTML += "<br/>";
+      var lineBreak = document.createElement('br');
+      element.appendChild(lineBreak);
+      type(); // Continue typing after the Enter key
     }, 500);
   }
 }
